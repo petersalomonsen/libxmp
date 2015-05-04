@@ -129,7 +129,7 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	/* &dtt_loader, */
 	&mgt_loader,
 	&arch_loader,
-	&sym_loader,
+	//&sym_loader,
 	&digi_loader,
 	&dbm_loader,
 	&emod_loader,
@@ -147,7 +147,7 @@ const struct format_loader *const format_loader[NUM_FORMATS + 2] = {
 	&amd_loader,
 	&rad_loader,
 	&hsc_loader,
-	&mfp_loader,
+	//&mfp_loader,
 	&abk_loader,
 	/* &alm_loader, */
 	/* &polly_loader, */

@@ -6,6 +6,9 @@
 #include <stddef.h>
 #include "memio.h"
 
+typedef void HIO_HANDLE;
+
+#if 0
 #define HIO_HANDLE_TYPE(x) ((x)->type)
 
 typedef struct {
@@ -18,6 +21,7 @@ typedef struct {
 		MFILE *mem;
 	} handle;
 } HIO_HANDLE;
+#endif
 
 int8	hio_read8s	(HIO_HANDLE *);
 uint8	hio_read8	(HIO_HANDLE *);

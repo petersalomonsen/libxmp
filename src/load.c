@@ -125,10 +125,12 @@ static int decrunch(HIO_HANDLE **h, char *filename, char **temp)
 	int i;
 	struct depacker *depacker = NULL;
 
+	return 0;
+
 	cmd = NULL;
 	res = 0;
 	*temp = NULL;
-	f = (*h)->handle.file;
+	//f = (*h)->handle.file;
 
 	fseek(f, 0, SEEK_SET);
 	headersize = fread(b, 1, 1024, f);
@@ -312,7 +314,7 @@ int xmp_test_module(char *path, struct xmp_test_info *info)
 			}
 #endif
 
-			fclose(h->handle.file);
+			//fclose(h->handle.file);
 
 #ifndef LIBXMP_CORE_PLAYER
 			unlink_temp_file(temp);
