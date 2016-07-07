@@ -26,6 +26,7 @@
 #include "loader.h"
 #include "it.h"
 #include "period.h"
+#include "it_extras.h"
 
 #define MAGIC_IMPM	MAGIC4('I','M','P','M')
 #define MAGIC_IMPI	MAGIC4('I','M','P','I')
@@ -773,6 +774,14 @@ static int load_it_sample(struct module_data *m, int i, int start,
 	xxs->flg |= ish.flags & IT_SMP_LOOP ? XMP_SAMPLE_LOOP : 0;
 	xxs->flg |= ish.flags & IT_SMP_BLOOP ? XMP_SAMPLE_LOOP_BIDIR : 0;
 
+	if (HAS_IT_MODULE_EXTRAS(*m)) {
+		IT_MODULE_EXTRAS(*m)->xsmp[i].sus_lps = ish.sloopbeg;
+		IT_MODULE_EXTRAS(*m)->xsmp[i].sus_lpe = ish.sloopend;
+
+		xxs->flg |= ish.flags & IT_SMP_SLOOP ? XMP_SAMPLE_SLOOP : 0;
+		xxs->flg |= ish.flags & IT_SMP_BSLOOP ? XMP_SAMPLE_SLOOP_BIDIR : 0;
+	}
+
 	if (sample_mode) {
 		/* Create an instrument for each sample */
 		mod->xxi[i].sub[0].vol = ish.vol;
@@ -1177,6 +1186,10 @@ static int it_load(struct module_data *m, HIO_HANDLE *f, const int start)
 	}
 
 	D_(D_INFO "Stored Samples: %d", mod->smp);
+
+	if (it_new_module_extras(m) < 0) {
+		goto err4;
+	}
 
 	for (i = 0; i < mod->smp; i++) {
 

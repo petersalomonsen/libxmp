@@ -26,6 +26,7 @@
 #include "extras.h"
 #include "med_extras.h"
 #include "hmn_extras.h"
+#include "it_extras.h"
 
 /*
  * Module extras
@@ -35,7 +36,9 @@ void release_module_extras(struct context_data *ctx)
 {
 	struct module_data *m = &ctx->m;
 
-	if (HAS_MED_MODULE_EXTRAS(*m))
+	if (HAS_IT_MODULE_EXTRAS(*m))
+		it_release_module_extras(m);
+	else if (HAS_MED_MODULE_EXTRAS(*m))
 		med_release_module_extras(m);
 	else if (HAS_HMN_MODULE_EXTRAS(*m))
 		hmn_release_module_extras(m);

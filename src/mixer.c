@@ -28,6 +28,7 @@
 #include "mixer.h"
 #include "period.h"
 #include "player.h"	/* for set_sample_end() */
+#include "it_extras.h"
 
 #ifdef LIBXMP_PAULA_SIMULATOR
 #include "paula.h"
@@ -373,6 +374,7 @@ void mixer_softmixer(struct context_data *ctx)
 	int32 *buf_pos;
 	void (*mix_fn)(struct mixer_voice *, int *, int, int, int, int);
 	mixer_set *mixers;
+	int sus_loop;
 
 	switch (s->interp) {
 	case XMP_INTERP_NEAREST:
@@ -439,8 +441,18 @@ void mixer_softmixer(struct context_data *ctx)
 			xxs = &ctx->smix.xxs[vi->smp - mod->smp];
 		}
 
-		lps = xxs->lps;
-		lpe = xxs->lpe;
+		
+		sus_loop = (xxs->flg & XMP_SAMPLE_SLOOP) &&
+				~vi->flags & VOICE_RELEASE &&
+				HAS_IT_MODULE_EXTRAS(*m);
+
+		if (sus_loop) {
+			lps = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lps;
+			lpe = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lpe;
+		} else {
+			lps = xxs->lps;
+			lpe = xxs->lpe;
+		}
 
 		if (p->flags & XMP_FLAGS_FIXLOOP) {
 			lps >>= 1;
@@ -522,7 +534,7 @@ void mixer_softmixer(struct context_data *ctx)
 				continue;
 
 			/* First sample loop run */
-			if ((~xxs->flg & XMP_SAMPLE_LOOP) || split_noloop) {
+			if (~xxs->flg & XMP_SAMPLE_LOOP || split_noloop) {
 				anticlick(ctx, voc, 0, 0, buf_pos, size);
 				set_sample_end(ctx, voc, 1);
 				size = 0;
@@ -533,9 +545,16 @@ void mixer_softmixer(struct context_data *ctx)
 			vi->end = lpe;
 			vi->sample_loop = 1;
 
-			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-				vi->end += lpe - lps;
-				vi->pos -= lpe - lps;	/* forward loop */
+			if (sus_loop) {
+				if (xxs->flg & XMP_SAMPLE_SLOOP_BIDIR) {
+					vi->end += lpe - lps;
+					vi->pos -= lpe - lps;	/* forward loop */
+				}
+			} else {
+				if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+					vi->end += lpe - lps;
+					vi->pos -= lpe - lps;	/* forward loop */
+				}
 			}
 		}
 	}
@@ -569,6 +588,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct xmp_sample *xxs;
 	int lps;
+	int sus_loop;
 
 	if (vi->smp < m->mod.smp) {
  		xxs = &m->mod.xxs[vi->smp];
@@ -580,7 +600,13 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 		return;
 	}
 
-	if (xxs->flg & XMP_SAMPLE_LOOP) {
+	sus_loop = (xxs->flg & XMP_SAMPLE_SLOOP) &&
+			~vi->flags & VOICE_RELEASE &&
+			HAS_IT_MODULE_EXTRAS(*m);
+
+	if (sus_loop) {
+		vi->end = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lpe;
+	} else if (xxs->flg & XMP_SAMPLE_LOOP) {
 		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
 			vi->end = xxs->len;
 		} else {
@@ -591,7 +617,9 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	}
 
 	if (pos >= vi->end) {
-		if (xxs->flg & XMP_SAMPLE_LOOP) {
+		if (sus_loop) {
+			pos = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lps;
+		} else if (xxs->flg & XMP_SAMPLE_LOOP) {
 			pos = xxs->lps;
 		} else {
 			pos = xxs->len;
@@ -606,8 +634,13 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 		lps >>= 1;
 	}
 
-	if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-		vi->end += (xxs->lpe - lps);
+	if (sus_loop) {
+		if (xxs->flg & XMP_SAMPLE_SLOOP_BIDIR) {
+			int end = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lpe;
+			vi->end += end - lps;
+		}
+	} else if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		vi->end += xxs->lpe - lps;
 	}
 
 	vi->attack = SLOW_ATTACK;
@@ -713,6 +746,18 @@ void mixer_setvol(struct context_data *ctx, int voc, int vol)
 	}
 
 	vi->vol = vol;
+}
+
+void mixer_release(struct context_data *ctx, int voc, int rel)
+{
+	struct player_data *p = &ctx->p;
+	struct mixer_voice *vi = &p->virt.voice_array[voc];
+
+	if (rel) {
+		vi->flags |= VOICE_RELEASE;
+	} else {
+		vi->flags &= ~VOICE_RELEASE;
+	}
 }
 
 void mixer_seteffect(struct context_data *ctx, int voc, int type, int val)
