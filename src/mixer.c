@@ -629,17 +629,17 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	vi->pos = pos;
 	vi->frac = frac;
 
-	lps = xxs->lps;
-	if (p->flags & XMP_FLAGS_FIXLOOP) {
-		lps >>= 1;
-	}
-
 	if (sus_loop) {
+		lps = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lps;
 		if (xxs->flg & XMP_SAMPLE_SLOOP_BIDIR) {
 			int end = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lpe;
 			vi->end += end - lps;
 		}
 	} else if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+		lps = xxs->lps;
+		if (p->flags & XMP_FLAGS_FIXLOOP) {
+			lps >>= 1;
+		}
 		vi->end += xxs->lpe - lps;
 	}
 
