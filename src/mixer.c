@@ -458,6 +458,29 @@ void mixer_softmixer(struct context_data *ctx)
 			lps >>= 1;
 		}
 
+
+#if 1
+	if (sus_loop && vi->smp < m->mod.smp) {
+		vi->end = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lpe;
+	} else if (xxs->flg & XMP_SAMPLE_LOOP) {
+		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
+			vi->end = xxs->len;
+		} else {
+			vi->end = xxs->lpe;
+			if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+				lps = xxs->lps;
+				lpe = xxs->lpe;
+				if (p->flags & XMP_FLAGS_FIXLOOP) {
+					lps >>= 1;
+				}
+				vi->end += lpe - lps;
+			}
+		}
+	} else {
+		vi->end = xxs->len;
+	}
+#endif
+
 		for (size = s->ticksize; size > 0; ) {
 			int split_noloop = 0;
 
@@ -545,12 +568,8 @@ void mixer_softmixer(struct context_data *ctx)
 			vi->end = lpe;
 			vi->sample_loop = 1;
 
-			if (sus_loop) {
-				if (xxs->flg & XMP_SAMPLE_SLOOP_BIDIR) {
-					vi->end += lpe - lps;
-					vi->pos -= lpe - lps;	/* forward loop */
-				}
-			} else {
+			/* FIXME: handle bidirectional sustain loop */
+			if (!sus_loop) {
 				if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
 					vi->end += lpe - lps;
 					vi->pos -= lpe - lps;	/* forward loop */
@@ -587,7 +606,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	struct module_data *m = &ctx->m;
 	struct mixer_voice *vi = &p->virt.voice_array[voc];
 	struct xmp_sample *xxs;
-	int lps;
+	int lps, lpe;
 	int sus_loop;
 
 	if (vi->smp < m->mod.smp) {
@@ -604,7 +623,7 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 			~vi->flags & VOICE_RELEASE &&
 			HAS_IT_MODULE_EXTRAS(*m);
 
-	if (sus_loop) {
+	if (sus_loop && vi->smp < m->mod.smp) {
 		vi->end = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lpe;
 	} else if (xxs->flg & XMP_SAMPLE_LOOP) {
 		if ((xxs->flg & XMP_SAMPLE_LOOP_FULL) && vi->sample_loop == 0) {
@@ -629,18 +648,19 @@ void mixer_voicepos(struct context_data *ctx, int voc, int pos, int frac)
 	vi->pos = pos;
 	vi->frac = frac;
 
-	if (sus_loop) {
-		lps = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lps;
-		if (xxs->flg & XMP_SAMPLE_SLOOP_BIDIR) {
-			int end = IT_MODULE_EXTRAS(*m)->xsmp[vi->smp].sus_lpe;
-			vi->end += end - lps;
+	/* FIXME: handling of bidirectional sustain loops
+	 * We unroll regular loops to handle bidirectional loops easily, but
+	 * this strategy won't work for sustain loops!
+	 */
+	if (!sus_loop) {
+		if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
+			lps = xxs->lps;
+			lpe = xxs->lpe;
+			if (p->flags & XMP_FLAGS_FIXLOOP) {
+				lps >>= 1;
+			}
+			vi->end += lpe - lps;
 		}
-	} else if (xxs->flg & XMP_SAMPLE_LOOP_BIDIR) {
-		lps = xxs->lps;
-		if (p->flags & XMP_FLAGS_FIXLOOP) {
-			lps >>= 1;
-		}
-		vi->end += xxs->lpe - lps;
 	}
 
 	vi->attack = SLOW_ATTACK;
