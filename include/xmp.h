@@ -25,8 +25,8 @@ extern "C" {
 # define LIBXMP_EXPORT __attribute__((visibility ("default")))
 #elif defined(__SUNPRO_C) && defined(XMP_LDSCOPE_GLOBAL)
 # define LIBXMP_EXPORT __global
-#elif defined(EMSCRIPTEN)
-# define LIBXMP_EXPORT EMSCRIPTEN_KEEPALIVE
+// #elif defined(EMSCRIPTEN)
+// # define LIBXMP_EXPORT EMSCRIPTEN_KEEPALIVE
 #else
 # define LIBXMP_EXPORT
 #endif

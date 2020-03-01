@@ -85,3 +85,5 @@ tags
 commit-*
 *.swp
 *.patch
+
+*.wasm
