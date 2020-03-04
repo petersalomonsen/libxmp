@@ -1,0 +1,5 @@
+{
+    "name": "wasm-xmp",
+    "version": "0.0.1",   
+    "files": ["wasm-mod-player.wasm"]
+}

@@ -21,6 +21,9 @@ void loadModule(void *mem, long size) {
     xmp_start_player(c, 44100, 0);
 }
 
+/**
+ * 
+ */
 EMSCRIPTEN_KEEPALIVE
 void * playFrame()
 {
