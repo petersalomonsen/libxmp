@@ -12,13 +12,13 @@ void * allocMemoryForModule(long size) {
 } 
 
 EMSCRIPTEN_KEEPALIVE
-void loadModule(void *mem, long size) {
+void loadModule(void *mem, long size, int samplerate) {
     /* Create the player context */
     c = xmp_create_context();
 
     /* Load our module */
     xmp_load_module_from_memory(c, mem, size);
-    xmp_start_player(c, 44100, 0);
+    xmp_start_player(c, samplerate, 0);
 }
 
 /**

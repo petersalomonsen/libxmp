@@ -35,7 +35,7 @@ async function start() {
     const heap8 = new Uint8Array(xmp.instance.exports.memory.buffer);
     const heap32 = new Uint32Array(xmp.instance.exports.memory.buffer);
     heap8.set(ptmod, memaddr);
-    xmp.instance.exports.loadModule(memaddr, ptmod.byteLength);
+    xmp.instance.exports.loadModule(memaddr, ptmod.byteLength, 44100);
     
     for(var f=0; f<1024; f++) {
         const frameinfo = xmp.instance.exports.playFrame();
