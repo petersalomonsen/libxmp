@@ -1,9 +1,17 @@
+WebAssembly Mod Player
+======================
+
+A mod player for WebAssembly. 
+
+How to render audio data from a mod file from node.js:
+
+```
 const fs = require('fs');
 
 const NOT_IMPLEMENTED = () => {
     console.error('not implemented');
 };
-const ptmod = fs.readFileSync('trackerscripting.mod');
+const ptmod = fs.readFileSync('some_protracker_module.mod');
 
 async function start() {
     const xmp = await WebAssembly.instantiate(fs.readFileSync('wasm-mod-player.wasm'), {
@@ -47,3 +55,4 @@ async function start() {
     }
 }
 start();
+```
