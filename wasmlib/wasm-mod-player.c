@@ -2,7 +2,7 @@
 #include "emscripten.h"
 #include <stdlib.h>
 
-xmp_context c;
+xmp_context ctx;
 struct xmp_frame_info frame_info;
 struct xmp_module_info module_info;
 
@@ -14,11 +14,16 @@ void * allocMemoryForModule(long size) {
 EMSCRIPTEN_KEEPALIVE
 void loadModule(void *mem, long size, int samplerate) {
     /* Create the player context */
-    c = xmp_create_context();
+    ctx = xmp_create_context();
 
     /* Load our module */
-    xmp_load_module_from_memory(c, mem, size);
-    xmp_start_player(c, samplerate, 0);
+    xmp_load_module_from_memory(ctx, mem, size);
+    xmp_start_player(ctx, samplerate, 0);
+}
+
+EMSCRIPTEN_KEEPALIVE
+void setPlayerParameter(int parameter, int value) {
+    xmp_set_player(ctx, parameter, value);
 }
 
 /**
@@ -27,7 +32,7 @@ void loadModule(void *mem, long size, int samplerate) {
 EMSCRIPTEN_KEEPALIVE
 void * playFrame()
 {
-    xmp_play_frame(c);
-    xmp_get_frame_info(c, &frame_info);
+    xmp_play_frame(ctx);
+    xmp_get_frame_info(ctx, &frame_info);
     return &frame_info;
 }

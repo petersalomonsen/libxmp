@@ -1,5 +1,5 @@
 {
     "name": "wasm-mod-player",
-    "version": "0.0.1",   
+    "version": "0.0.2",   
     "files": ["wasm-mod-player.wasm", "README.md"]
 }

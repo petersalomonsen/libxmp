@@ -25,18 +25,6 @@ async function start() {
             "args_sizes_get": NOT_IMPLEMENTED,
             "args_get": NOT_IMPLEMENTED,
             "proc_exit": NOT_IMPLEMENTED,
-        },
-        "env": {
-            "round": (num) => Math.round(num),
-            "__syscall221": NOT_IMPLEMENTED,
-            "__syscall5": NOT_IMPLEMENTED,
-            "__syscall10": NOT_IMPLEMENTED,
-            "__syscall220": NOT_IMPLEMENTED,
-            "__syscall60": NOT_IMPLEMENTED,
-            "__syscall195": NOT_IMPLEMENTED,
-            "__syscall54": NOT_IMPLEMENTED,
-            "localtime_r": NOT_IMPLEMENTED,
-            "__clock_gettime": NOT_IMPLEMENTED
         }
     });
     
@@ -45,7 +33,8 @@ async function start() {
     const heap32 = new Uint32Array(xmp.instance.exports.memory.buffer);
     heap8.set(ptmod, memaddr);
     xmp.instance.exports.loadModule(memaddr, ptmod.byteLength, 44100);
-    
+    xmp.instance.exports.setPlayerParameter(1,50); 
+
     for(var f=0; f<1024; f++) {
         const frameinfo = xmp.instance.exports.playFrame();
         const bufptr = heap32[(frameinfo/4) + 10];
